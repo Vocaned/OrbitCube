@@ -17,8 +17,10 @@ extends Node3D
 var _curZoom: float = defaultZoom
 var _curYOffset: float = camYOffset
 
+
 func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+
 
 func _input(event) -> void:
 	if event is InputEventMouseMotion:
@@ -39,6 +41,7 @@ func _input(event) -> void:
 			if event.button_index == MOUSE_BUTTON_WHEEL_DOWN and _curZoom < maxZoom:
 				_curZoom += zoomStep
 				camYOffset += zoomYStep
+
 
 func _physics_process(delta) -> void:
 	# zoom the camera accordingly
