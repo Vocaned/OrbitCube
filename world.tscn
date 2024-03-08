@@ -1,4 +1,4 @@
-[gd_scene load_steps=6 format=3 uid="uid://oyvtmie3p8fw"]
+[gd_scene load_steps=7 format=3 uid="uid://oyvtmie3p8fw"]
 
 [ext_resource type="Script" path="res://World.gd" id="1_cel2i"]
 [ext_resource type="Script" path="res://CameraRig.gd" id="1_n6ick"]
@@ -12,11 +12,16 @@ sky_material = SubResource("ProceduralSkyMaterial_24ji8")
 background_mode = 2
 sky = SubResource("Sky_sb0kx")
 
+[sub_resource type="BoxMesh" id="BoxMesh_du6ai"]
+
 [node name="Root" type="Node3D"]
 
-[node name="CameraRig" type="Node3D" parent="." node_paths=PackedStringArray("camTarget")]
+[node name="CameraTarget" type="Node3D" parent="."]
+unique_name_in_owner = true
+
+[node name="CameraRig" type="Node3D" parent="."]
+unique_name_in_owner = true
 script = ExtResource("1_n6ick")
-camTarget = NodePath("..")
 
 [node name="SpringArm3D" type="SpringArm3D" parent="CameraRig"]
 
@@ -32,3 +37,6 @@ shadow_bias = 0.04
 
 [node name="World" type="Node" parent="."]
 script = ExtResource("1_cel2i")
+
+[node name="DefaultMesh" type="MeshInstance3D" parent="World"]
+mesh = SubResource("BoxMesh_du6ai")

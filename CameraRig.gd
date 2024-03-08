@@ -11,15 +11,20 @@ extends Node3D
 @export var horizontalSensitivity: float = 0.002
 @export var camYOffset: float = 4.0
 @export var camLerpSpeed: float = 16.0
-@export var camTarget: Node
 
-@onready var _springArm = $SpringArm3D
+@onready var _camTarget: Node3D = %CameraTarget
+@onready var _springArm: SpringArm3D = $SpringArm3D
 var _curZoom: float = defaultZoom
 var _curYOffset: float = camYOffset
 
 
 func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+
+
+func set_camera_target(target: MeshInstance3D, zoom: float) -> void:
+	_camTarget.position = target.global_transform * target.get_aabb().get_center()
+	_curZoom = zoom
 
 
 func _input(event) -> void:
@@ -49,4 +54,4 @@ func _physics_process(delta) -> void:
 	
 	# set the position of the rig to follow the target
 	_curYOffset = lerp(_curYOffset, camYOffset, delta * camLerpSpeed)
-	set_position(camTarget.global_transform.origin + Vector3(0,_curYOffset,0))
+	set_position(_camTarget.global_transform.origin + Vector3(0, _curYOffset, 0))
