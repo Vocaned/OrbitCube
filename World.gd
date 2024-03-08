@@ -1,6 +1,8 @@
 extends Node
 
 var _cur_httprequest: HTTPRequest = null
+@onready var _default_mesh = $DefaultMesh
+@onready var _camera_rig = %CameraRig
 
 var _world_width = 64
 var _world_length = 64
@@ -88,8 +90,11 @@ func _load_texpack(path: String) -> void:
 	print("Textures finished loading.")
 
 	# Change the mesh material in case that thread finished before this one
+	_update_mesh_material.call_deferred()
+
+func _update_mesh_material() -> void:
 	for child in get_children():
-		if child is MeshInstance3D:
+		if child is MeshInstance3D and child != _default_mesh:
 			child.material_override = _world_material
 
 func _generate_world_mesh() -> void:
@@ -114,6 +119,11 @@ func _generate_world_mesh() -> void:
 	mi.mesh = surface_tool.commit()
 	mi.material_override = _world_material
 	add_child.call_deferred(mi)
+
+	if _default_mesh:
+		_default_mesh.queue_free()
+
+	_camera_rig.set_camera_target.call_deferred(mi, 100)
 
 	print("World finished loading.")
 
