@@ -1,40 +1,51 @@
 extends Node
+class_name World
+
+var world_size: Vector3i
+var world_blocks: Array
 
 var _cur_httprequest: HTTPRequest = null
-@onready var _default_mesh = $DefaultMesh
-@onready var _camera_rig = %CameraRig
-
-var _world_width = 64
-var _world_length = 64
-var _world_height = 64
-var _world_blocks = {}
+var _default_mesh
+var _camera_rig
 
 var _world_material = PlaceholderMaterial.new()
 
 
-func get_world_block(block_pos: Vector3i) -> int:
-	if block_pos.x < 0 or block_pos.x >= _world_width \
-	or block_pos.y < 0 or block_pos.y >= _world_height \
-	or block_pos.z < 0 or block_pos.z >= _world_length:
-		return -1
-	return _world_blocks.get(block_pos.x + _world_width * (block_pos.z * _world_length + block_pos.y), 0)
-
-
-func set_world_block(block_pos: Vector3i, block_id: int) -> void:
-	if block_pos.x < 0 or block_pos.x >= _world_width \
-	or block_pos.y < 0 or block_pos.y >= _world_height \
-	or block_pos.z < 0 or block_pos.z >= _world_length:
-		push_error("Tried to put a block outside of the world's bounds.")
-		return
-	_world_blocks[block_pos.x + _world_width * (block_pos.z * _world_length + block_pos.y)] = block_id
-
-
 func _ready() -> void:
+	_default_mesh = MeshInstance3D.new()
+	_default_mesh.mesh = BoxMesh.new()
+
+
+func initialize() -> void:
+	var len = world_blocks.size()
+	assert(world_size and world_blocks,"Could not initialize, world data missing.")
+	assert(len == (world_size.x * world_size.y * world_size.z), "Could not initialize, world data doesn't match world's size.")
+
+	print("initializing world")
+
 	var _thread1 = Thread.new()
 	_thread1.start(_create_world_material)
 
 	var _thread2 = Thread.new()
 	_thread2.start(_generate_world_mesh)
+
+
+func get_world_block(block_pos: Vector3i) -> int:
+	if block_pos.x < 0 or block_pos.x >= world_size.x \
+	or block_pos.y < 0 or block_pos.y >= world_size.y \
+	or block_pos.z < 0 or block_pos.z >= world_size.z:
+		return -1
+	var index = block_pos.x + world_size.x * (block_pos.z + block_pos.y * world_size.z)
+	return world_blocks[index]
+
+
+func set_world_block(block_pos: Vector3i, block_id: int) -> void:
+	if block_pos.x < 0 or block_pos.x >= world_size.x \
+	or block_pos.y < 0 or block_pos.y >= world_size.y \
+	or block_pos.z < 0 or block_pos.z >= world_size.z:
+		push_error("Tried to put a block outside of the world's bounds.")
+		return
+	world_blocks[block_pos.x + world_size.x * (block_pos.z + block_pos.y * world_size.z)] = block_id
 
 
 func _create_world_material() -> void:
@@ -101,14 +112,9 @@ func _generate_world_mesh() -> void:
 	var surface_tool = SurfaceTool.new()
 	surface_tool.begin(Mesh.PRIMITIVE_TRIANGLES)
 	
-	for x in range(64):
-		for y in range(32):
-			for z in range(64):
-				set_world_block(Vector3i(x, y, z), 1)
-
-	for x in range(64):
-		for y in range(32):
-			for z in range(64):
+	for x in range(world_size.x):
+		for y in range(world_size.y):
+			for z in range(world_size.z):
 				var _pos = Vector3i(x, y, z)
 				_draw_block_mesh(surface_tool, _pos, get_world_block(_pos))
 
