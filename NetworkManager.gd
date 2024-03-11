@@ -4,6 +4,8 @@ var _NetworkParser: NetworkParser
 var _GZIPParser: StreamPeerGZIP
 var _world: World
 
+var _thread
+var _chat
 
 func _ready() -> void:
 	create_gzip_parser()
@@ -14,8 +16,27 @@ func _ready() -> void:
 		_world._camera_rig = %CameraRig
 		add_child(_world)
 
-	var _thread1 = Thread.new()
-	_thread1.start(func(): connect_to_server("127.0.0.1", 25565))
+func connect_to_server(ip: String, port: int) -> void:
+	if not _chat:
+		_chat = %Chat
+
+	_thread = Thread.new()
+	_thread.start(func():
+		var err = _NetworkParser.connect_to_host(ip, port)
+		assert(err == OK, "Could not connect to server. %s" % error_string(err))
+
+		while _NetworkParser.get_status() != StreamPeerTCP.STATUS_CONNECTED:
+			_NetworkParser.poll()
+
+		send_identification("username", "asd")
+
+		while true:
+			if _NetworkParser.get_available_bytes() < 1:
+				continue
+			var packet_type = _NetworkParser.get_u8()
+			_chat.add_message.call_deferred("recv %02x" % packet_type)
+			parse_recv_packet(packet_type)	
+	)
 
 
 func create_gzip_parser() -> void:
@@ -25,25 +46,8 @@ func create_gzip_parser() -> void:
 		_GZIPParser = StreamPeerGZIP.new()
 	
 	_GZIPParser.big_endian = true
-	_GZIPParser.start_decompression(false, 800000000) # Just allocate 100MB of ram to the buffer for now. Make dynamic later.
+	_GZIPParser.start_decompression(false, 100 * 1000 * 1000) # Just allocate 100MB of memory to the buffer for now. TODO: make dynamic
 
-
-func connect_to_server(ip: String, port: int) -> void:
-	var err = _NetworkParser.connect_to_host(ip, port)
-	assert(err == OK, "Could not connect to server. %s" % error_string(err))
-	
-	while _NetworkParser.get_status() != StreamPeerTCP.STATUS_CONNECTED:
-		_NetworkParser.poll()
-
-	send_identification("username", "asd")
-
-	while true:
-		if _NetworkParser.get_available_bytes() < 1:
-			continue
-		var packet_type = _NetworkParser.get_u8()
-		print("recv %x" % packet_type)
-		parse_recv_packet(packet_type)
-	
 
 func parse_recv_packet(packet_type: int) -> void:
 	match packet_type:
@@ -58,9 +62,9 @@ func parse_recv_packet(packet_type: int) -> void:
 		0x03:
 			recv_chunk()
 		0x04:
-			print("World finalized")
+			_chat.add_message.call_deferred("World finalized")
 			recv_finalize()
-			_world.initialize()
+			_world.initialize(_chat)
 		0x06:
 			# Set block
 			_NetworkParser.get_data(7)
@@ -86,16 +90,16 @@ func parse_recv_packet(packet_type: int) -> void:
 			# Message
 			var _player_id = _NetworkParser.get_8()
 			var message = _NetworkParser.get_mc_string()
-			print("Message: %s" % message)
+			_chat.add_chat_message.call_deferred(message)
 		0x0e:
 			# Disconnect player
 			var message = _NetworkParser.get_mc_string()
-			print("Disconnected: %s" % message)
+			_chat.add_message.call_deferred("Disconnected: %s" % message)
 		0x0f:
 			# Update user type
 			_NetworkParser.get_8()
 		_:
-			push_error("Unknown packet type %X" % packet_type)
+			_chat.add_message.call_deferred("Unknown packet type %X" % packet_type)
 
 
 func send_identification(username: String, mppass: String) -> void:

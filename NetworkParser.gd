@@ -15,5 +15,5 @@ func put_half_float(value: float) -> void:
     put_data(buffer)
 
 func get_mc_string() -> String:
-    var buffer = get_data(64)
+    var buffer = get_data(64)[1]
     return PackedByteArray(buffer).get_string_from_ascii()

@@ -1,7 +1,9 @@
-[gd_scene load_steps=6 format=3 uid="uid://oyvtmie3p8fw"]
+[gd_scene load_steps=8 format=3 uid="uid://oyvtmie3p8fw"]
 
+[ext_resource type="Script" path="res://Root.gd" id="1_6imlk"]
 [ext_resource type="Script" path="res://CameraRig.gd" id="1_n6ick"]
 [ext_resource type="Script" path="res://NetworkManager.gd" id="2_7nwjx"]
+[ext_resource type="Script" path="res://Chat.gd" id="3_ehrwg"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_24ji8"]
 
@@ -13,6 +15,7 @@ background_mode = 2
 sky = SubResource("Sky_sb0kx")
 
 [node name="Root" type="Node3D"]
+script = ExtResource("1_6imlk")
 
 [node name="CameraTarget" type="Node3D" parent="."]
 unique_name_in_owner = true
@@ -35,3 +38,23 @@ shadow_bias = 0.04
 
 [node name="NetworkManager" type="Node" parent="."]
 script = ExtResource("2_7nwjx")
+
+[node name="Chat" type="RichTextLabel" parent="."]
+unique_name_in_owner = true
+anchors_preset = -1
+anchor_top = 0.6
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_right = -20.0
+offset_bottom = -20.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_font_sizes/normal_font_size = 10
+theme_override_font_sizes/bold_font_size = 10
+theme_override_font_sizes/italics_font_size = 10
+theme_override_font_sizes/bold_italics_font_size = 10
+theme_override_font_sizes/mono_font_size = 10
+bbcode_enabled = true
+scroll_following = true
+script = ExtResource("3_ehrwg")
