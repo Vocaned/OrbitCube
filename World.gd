@@ -10,23 +10,112 @@ var _camera_rig
 
 var _world_material = PlaceholderMaterial.new()
 
+var _blockdefs = {}
+
+var _thread1
+var _thread2
+
+var _chat
+
+func _new_block(id: int, sprite: bool, top: int, side: int, bottom: int, drawtype: int, fullbright: bool, min: Vector3i, max: Vector3i, name: String) -> void:
+	_blockdefs[id] = {
+		"sprite": sprite,
+		"top": top,
+		"side": side,
+		"bottom": bottom,
+		"drawtype": drawtype,
+		"fullbright": fullbright,
+		"min": min,
+		"max": max,
+		"name": name
+	}
+
 
 func _ready() -> void:
 	_default_mesh = MeshInstance3D.new()
 	_default_mesh.mesh = BoxMesh.new()
 
+	# Create default blocks
+	_new_block(0,  false,  0,  0,  0, 4, false, Vector3i(0, 0, 0), Vector3i(16, 16, 16), 'Air')
+	_new_block(1,  false,  1,  1,  1, 0, false, Vector3i(0, 0, 0), Vector3i(16, 16, 16), 'Stone')
+	_new_block(2,  false,  0,  3,  2, 0, false, Vector3i(0, 0, 0), Vector3i(16, 16, 16), 'Grass')
+	_new_block(3,  false,  2,  2,  2, 0, false, Vector3i(0, 0, 0), Vector3i(16, 16, 16), 'Dirt')
+	_new_block(4,  false, 16, 16, 16, 0, false, Vector3i(0, 0, 0), Vector3i(16, 16, 16), 'Cobblestone')
+	_new_block(5,  false,  4,  4,  4, 0, false, Vector3i(0, 0, 0), Vector3i(16, 16, 16), 'Wood')
+	_new_block(6,   true, 15, 15, 15, 1, false, Vector3i(0, 0, 0), Vector3i(16, 16, 16), 'Sapling')
+	_new_block(7,  false, 17, 17, 17, 0, false, Vector3i(0, 0, 0), Vector3i(16, 16, 16), 'Bedrock')
+	_new_block(8,  false, 14, 14, 14, 3, false, Vector3i(0, 0, 0), Vector3i(16, 15, 16), 'Water')
+	_new_block(9,  false, 14, 14, 14, 3, false, Vector3i(0, 0, 0), Vector3i(16, 15, 16), 'Still Water')
+	_new_block(10, false, 30, 30, 30, 0,  true, Vector3i(0, 0, 0), Vector3i(16, 15, 16), 'Lava')
+	_new_block(11, false, 30, 30, 30, 0,  true, Vector3i(0, 0, 0), Vector3i(16, 15, 16), 'Still Lava')
+	_new_block(12, false, 18, 18, 18, 0, false, Vector3i(0, 0, 0), Vector3i(16, 16, 16), 'Sand')
+	_new_block(13, false, 19, 19, 19, 0, false, Vector3i(0, 0, 0), Vector3i(16, 16, 16), 'Gravel')
+	_new_block(14, false, 32, 32, 32, 0, false, Vector3i(0, 0, 0), Vector3i(16, 16, 16), 'Gold Ore')
+	_new_block(15, false, 33, 33, 33, 0, false, Vector3i(0, 0, 0), Vector3i(16, 16, 16), 'Iron Ore')
+	_new_block(16, false, 34, 34, 34, 0, false, Vector3i(0, 0, 0), Vector3i(16, 16, 16), 'Coal Ore')
+	_new_block(17, false, 21, 20, 21, 0, false, Vector3i(0, 0, 0), Vector3i(16, 16, 16), 'Log')
+	_new_block(18, false, 22, 22, 22, 2, false, Vector3i(0, 0, 0), Vector3i(16, 16, 16), 'Leaves')
+	_new_block(19, false, 48, 48, 48, 0, false, Vector3i(0, 0, 0), Vector3i(16, 16, 16), 'Sponge')
+	_new_block(20, false, 49, 49, 49, 1, false, Vector3i(0, 0, 0), Vector3i(16, 16, 16), 'Glass')
+	_new_block(21, false, 64, 64, 64, 0, false, Vector3i(0, 0, 0), Vector3i(16, 16, 16), 'Red')
+	_new_block(22, false, 65, 65, 65, 0, false, Vector3i(0, 0, 0), Vector3i(16, 16, 16), 'Orange')
+	_new_block(23, false, 66, 66, 66, 0, false, Vector3i(0, 0, 0), Vector3i(16, 16, 16), 'Yellow')
+	_new_block(24, false, 67, 67, 67, 0, false, Vector3i(0, 0, 0), Vector3i(16, 16, 16), 'Lime')
+	_new_block(25, false, 68, 68, 68, 0, false, Vector3i(0, 0, 0), Vector3i(16, 16, 16), 'Green')
+	_new_block(26, false, 69, 69, 69, 0, false, Vector3i(0, 0, 0), Vector3i(16, 16, 16), 'Teal')
+	_new_block(27, false, 70, 70, 70, 0, false, Vector3i(0, 0, 0), Vector3i(16, 16, 16), 'Aqua')
+	_new_block(28, false, 71, 71, 71, 0, false, Vector3i(0, 0, 0), Vector3i(16, 16, 16), 'Cyan')
+	_new_block(29, false, 72, 72, 72, 0, false, Vector3i(0, 0, 0), Vector3i(16, 16, 16), 'Blue')
+	_new_block(30, false, 73, 73, 73, 0, false, Vector3i(0, 0, 0), Vector3i(16, 16, 16), 'Indigo')
+	_new_block(31, false, 74, 74, 74, 0, false, Vector3i(0, 0, 0), Vector3i(16, 16, 16), 'Violet')
+	_new_block(32, false, 75, 75, 75, 0, false, Vector3i(0, 0, 0), Vector3i(16, 16, 16), 'Magenta')
+	_new_block(33, false, 76, 76, 76, 0, false, Vector3i(0, 0, 0), Vector3i(16, 16, 16), 'Pink')
+	_new_block(34, false, 77, 77, 77, 0, false, Vector3i(0, 0, 0), Vector3i(16, 16, 16), 'Black')
+	_new_block(35, false, 78, 78, 78, 0, false, Vector3i(0, 0, 0), Vector3i(16, 16, 16), 'Gray')
+	_new_block(36, false, 79, 79, 79, 0, false, Vector3i(0, 0, 0), Vector3i(16, 16, 16), 'White')
+	_new_block(37,  true, 13, 13, 13, 1, false, Vector3i(0, 0, 0), Vector3i(16, 16, 16), 'Dandelion')
+	_new_block(38,  true, 12, 12, 12, 1, false, Vector3i(0, 0, 0), Vector3i(16, 16, 16), 'Rose')
+	_new_block(39,  true, 29, 29, 29, 1, false, Vector3i(0, 0, 0), Vector3i(16, 16, 16), 'Brown Mushroom')
+	_new_block(40,  true, 28, 28, 28, 1, false, Vector3i(0, 0, 0), Vector3i(16, 16, 16), 'Red Mushroom')
+	_new_block(41, false, 24, 40, 56, 0, false, Vector3i(0, 0, 0), Vector3i(16, 16, 16), 'Gold')
+	_new_block(42, false, 23, 39, 55, 0, false, Vector3i(0, 0, 0), Vector3i(16, 16, 16), 'Iron')
+	_new_block(43, false,  6,  5,  6, 0, false, Vector3i(0, 0, 0), Vector3i(16, 16, 16), 'Double Slab')
+	_new_block(44, false,  6,  5,  6, 0, false, Vector3i(0, 0, 0), Vector3i(16,  8, 16), 'Slab')
+	_new_block(45, false,  7,  7,  7, 0, false, Vector3i(0, 0, 0), Vector3i(16, 16, 16), 'Brick')
+	_new_block(46, false,  9,  8, 10, 0, false, Vector3i(0, 0, 0), Vector3i(16, 16, 16), 'TNT')
+	_new_block(47, false,  4, 35,  4, 0, false, Vector3i(0, 0, 0), Vector3i(16, 16, 16), 'Bookshelf')
+	_new_block(48, false, 36, 36, 36, 0, false, Vector3i(0, 0, 0), Vector3i(16, 16, 16), 'Mossy Rocks')
+	_new_block(49, false, 37, 37, 37, 0, false, Vector3i(0, 0, 0), Vector3i(16, 16, 16), 'Obsidian')
+	_new_block(50, false, 16, 16, 16, 0, false, Vector3i(0, 0, 0), Vector3i(16,  8, 16), 'Cobblestone Slab')
+	_new_block(51,  true, 11, 11, 11, 1, false, Vector3i(0, 0, 0), Vector3i(16, 16, 16), 'Rope')
+	_new_block(52, false, 25, 41, 57, 0, false, Vector3i(0, 0, 0), Vector3i(16, 16, 16), 'Sandstone')
+	_new_block(53, false, 50, 50, 50, 0, false, Vector3i(0, 0, 0), Vector3i(16,  2, 16), 'Snow')
+	_new_block(54,  true, 38, 38, 38, 1, false, Vector3i(0, 0, 0), Vector3i(16, 16, 16), 'Fire')
+	_new_block(55, false, 80, 80, 80, 0, false, Vector3i(0, 0, 0), Vector3i(16, 16, 16), 'Light Pink')
+	_new_block(56, false, 81, 81, 81, 0, false, Vector3i(0, 0, 0), Vector3i(16, 16, 16), 'Forest Green')
+	_new_block(57, false, 82, 82, 82, 0, false, Vector3i(0, 0, 0), Vector3i(16, 16, 16), 'Brown')
+	_new_block(58, false, 83, 83, 83, 0, false, Vector3i(0, 0, 0), Vector3i(16, 16, 16), 'Deep Blue')
+	_new_block(59, false, 84, 84, 84, 0, false, Vector3i(0, 0, 0), Vector3i(16, 16, 16), 'Turquoise')
+	_new_block(60, false, 51, 51, 51, 3, false, Vector3i(0, 0, 0), Vector3i(16, 16, 16), 'Ice')
+	_new_block(61, false, 54, 54, 54, 0, false, Vector3i(0, 0, 0), Vector3i(16, 16, 16), 'Ceramic Tile')
+	_new_block(62, false, 86, 86, 86, 0,  true, Vector3i(0, 0, 0), Vector3i(16, 16, 16), 'Magma')
+	_new_block(63, false, 26, 42, 58, 0, false, Vector3i(0, 0, 0), Vector3i(16, 16, 16), 'Pillar')
+	_new_block(64, false, 53, 53, 53, 0, false, Vector3i(0, 0, 0), Vector3i(16, 16, 16), 'Crate')
+	_new_block(65, false, 52, 52, 52, 0, false, Vector3i(0, 0, 0), Vector3i(16, 16, 16), 'Stone Brick')
 
-func initialize() -> void:
-	var len = world_blocks.size()
+
+func initialize(chat: Node) -> void:
+	_chat = chat
+
 	assert(world_size and world_blocks,"Could not initialize, world data missing.")
-	assert(len == (world_size.x * world_size.y * world_size.z), "Could not initialize, world data doesn't match world's size.")
+	assert(world_blocks.size() == (world_size.x * world_size.y * world_size.z), "Could not initialize, world data doesn't match world's size.")
 
-	print("initializing world")
+	_chat.add_message.call_deferred("initializing world")
 
-	var _thread1 = Thread.new()
+	_thread1 = Thread.new()
 	_thread1.start(_create_world_material)
 
-	var _thread2 = Thread.new()
+	_thread2 = Thread.new()
 	_thread2.start(_generate_world_mesh)
 
 
@@ -98,15 +187,17 @@ func _load_texpack(path: String) -> void:
 	terrain_material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
 	_world_material = terrain_material
 
-	print("Textures finished loading.")
+	_chat.add_message.call_deferred("Textures finished loading.")
 
 	# Change the mesh material in case that thread finished before this one
 	_update_mesh_material.call_deferred()
+
 
 func _update_mesh_material() -> void:
 	for child in get_children():
 		if child is MeshInstance3D and child != _default_mesh:
 			child.material_override = _world_material
+
 
 func _generate_world_mesh() -> void:
 	var surface_tool = SurfaceTool.new()
@@ -131,7 +222,7 @@ func _generate_world_mesh() -> void:
 
 	_camera_rig.set_camera_target.call_deferred(mi, 100)
 
-	print("World finished loading.")
+	_chat.add_message.call_deferred("World finished loading.")
 
 
 func _draw_block_mesh(surface_tool: SurfaceTool, block_pos: Vector3i, block_id: int) -> void:
@@ -181,8 +272,10 @@ func calculate_block_verts(block_pos: Vector3i) -> Array[Vector3]:
 
 
 func calculate_block_uvs(block_id: int) -> Array[Vector2]:
-	var row = floori(block_id / 16.0)
-	var col = block_id % 16
+	var texture = _blockdefs[block_id]["side"]
+
+	var row = floori(texture / 16.0)
+	var col = texture % 16
 
 	return [
 		# Godot 4 has a weird bug where there are seams at the edge
